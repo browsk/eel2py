@@ -16,6 +16,7 @@ dev = [
     "numpy",
     "black",
     "ruff",
+    "pyright",
     "pre-commit",
 ]
 

@@ -4,6 +4,7 @@ Walks the AST and emits Python source code as a string.
 """
 
 from .parser import (
+    ASTNode,
     Assign,
     BinOp,
     Call,
@@ -153,14 +154,12 @@ class CodeGen:
         self.indent -= 1
         self.emit()
 
-    def _gen_stmt(self, node: object) -> None:
+    def _gen_stmt(self, node: ASTNode) -> None:
         """Emit a statement from an AST node.
 
         Args:
             node: An AST statement node (Assign, If, While, Loop, or expression).
         """
-        if node is None:
-            return
         if isinstance(node, Assign):
             target = self._gen_assign_target(node.target)
             value = self._gen_expr(node.value)
@@ -200,7 +199,7 @@ class CodeGen:
         else:
             self.emit(self._gen_expr(node))
 
-    def _gen_assign_target(self, node: object) -> str:
+    def _gen_assign_target(self, node: Ident | Index) -> str:
         """Emit the left-hand side of an assignment.
 
         Args:
@@ -211,13 +210,11 @@ class CodeGen:
         """
         if isinstance(node, Ident):
             return f'state["{node.name}"]'
-        if isinstance(node, Index):
-            arr = self._gen_expr(node.array)
-            idx = self._gen_expr(node.idx)
-            return f"{arr}[int({idx})]"
-        return self._gen_expr(node)
+        arr = self._gen_expr(node.array)
+        idx = self._gen_expr(node.idx)
+        return f"{arr}[int({idx})]"
 
-    def _gen_expr(self, node: object) -> str:
+    def _gen_expr(self, node: ASTNode) -> str:
         """Emit a Python expression string from an AST expression node.
 
         Args:

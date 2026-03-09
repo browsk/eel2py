@@ -7,6 +7,7 @@ composed of dataclass nodes.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TypeAlias
 
 from .tokenizer import TT, Token, tokenize
 
@@ -32,7 +33,7 @@ class Section:
     """
 
     name: str
-    body: list
+    body: list[ASTNode]
 
 
 @dataclass
@@ -45,9 +46,9 @@ class Assign:
         value: The right-hand side expression node.
     """
 
-    target: object
+    target: Ident | Index
     op: str
-    value: object
+    value: ASTNode
 
 
 @dataclass
@@ -60,9 +61,9 @@ class If:
         else_: List of statement nodes for the false branch (may be empty).
     """
 
-    cond: object
-    then: list
-    else_: list
+    cond: ASTNode
+    then: list[ASTNode]
+    else_: list[ASTNode]
 
 
 @dataclass
@@ -74,8 +75,8 @@ class While:
         body: List of statement nodes executed while cond is truthy.
     """
 
-    cond: object
-    body: list
+    cond: ASTNode
+    body: list[ASTNode]
 
 
 @dataclass
@@ -87,8 +88,8 @@ class Loop:
         body: Single expression node executed count times.
     """
 
-    count: object
-    body: object
+    count: ASTNode
+    body: ASTNode
 
 
 @dataclass
@@ -102,8 +103,8 @@ class BinOp:
     """
 
     op: str
-    left: object
-    right: object
+    left: ASTNode
+    right: ASTNode
 
 
 @dataclass
@@ -116,7 +117,7 @@ class UnaryOp:
     """
 
     op: str
-    operand: object
+    operand: ASTNode
 
 
 @dataclass
@@ -129,9 +130,9 @@ class Ternary:
         else_: Value when condition is falsy.
     """
 
-    cond: object
-    then: object
-    else_: object
+    cond: ASTNode
+    then: ASTNode
+    else_: ASTNode
 
 
 @dataclass
@@ -144,7 +145,7 @@ class Call:
     """
 
     name: str
-    args: list
+    args: list[ASTNode]
 
 
 @dataclass
@@ -156,8 +157,8 @@ class Index:
         idx: The index expression node.
     """
 
-    array: object
-    idx: object
+    array: ASTNode
+    idx: ASTNode
 
 
 @dataclass
@@ -191,6 +192,22 @@ class StringLit:
     """
 
     value: str
+
+
+ASTNode: TypeAlias = (
+    Number
+    | StringLit
+    | Ident
+    | BinOp
+    | UnaryOp
+    | Ternary
+    | Call
+    | Index
+    | Assign
+    | If
+    | While
+    | Loop
+)
 
 
 class ParseError(Exception):
@@ -254,7 +271,7 @@ class Parser:
         Returns:
             The root Program node.
         """
-        sections = []
+        sections: list[Section] = []
         while not self.match(TT.EOF):
             if self.match(TT.SECTION):
                 sections.append(self.parse_section())
@@ -275,7 +292,7 @@ class Parser:
         body = self.parse_block_until(TT.SECTION, TT.EOF)
         return Section(name, body)
 
-    def parse_block_until(self, *stop_types: TT) -> list:
+    def parse_block_until(self, *stop_types: TT) -> list[ASTNode]:
         """Parse statements until a token of one of stop_types is seen.
 
         Args:
@@ -284,14 +301,14 @@ class Parser:
         Returns:
             List of parsed statement nodes (None entries dropped).
         """
-        stmts = []
+        stmts: list[ASTNode] = []
         while not self.match(*stop_types):
             stmt = self.parse_statement()
             if stmt is not None:
                 stmts.append(stmt)
         return stmts
 
-    def parse_statement(self) -> object:
+    def parse_statement(self) -> ASTNode | None:
         """Parse a single statement.
 
         Returns:
@@ -325,7 +342,7 @@ class Parser:
         cond = self.parse_expr()
         self.expect(TT.RPAREN)
         then = self.parse_block_body()
-        else_: list = []
+        else_: list[ASTNode] = []
         if self.match(TT.IDENT) and self.peek().value == "else":
             self.advance()
             else_ = self.parse_block_body()
@@ -358,7 +375,7 @@ class Parser:
         self.expect(TT.RPAREN)
         return Loop(count, body)
 
-    def parse_block_body(self) -> list:
+    def parse_block_body(self) -> list[ASTNode]:
         """Parse a block body: either a parenthesised sequence or a single statement.
 
         Returns:
@@ -366,7 +383,7 @@ class Parser:
         """
         if self.match(TT.LPAREN):
             self.advance()
-            stmts = []
+            stmts: list[ASTNode] = []
             while not self.match(TT.RPAREN):
                 s = self.parse_statement()
                 if s is not None:
@@ -377,7 +394,7 @@ class Parser:
             s = self.parse_statement()
             return [s] if s is not None else []
 
-    def parse_expr(self) -> object:
+    def parse_expr(self) -> ASTNode:
         """Parse an expression (entry point for expression parsing).
 
         Returns:
@@ -385,7 +402,7 @@ class Parser:
         """
         return self.parse_assign()
 
-    def parse_assign(self) -> object:
+    def parse_assign(self) -> ASTNode:
         """Parse an assignment expression.
 
         Returns:
@@ -402,10 +419,12 @@ class Parser:
         if self.peek().type in ops:
             op = ops[self.advance().type]
             right = self.parse_assign()
+            if not isinstance(left, (Ident, Index)):
+                raise ParseError(f"Invalid assignment target: {left!r}")
             return Assign(left, op, right)
         return left
 
-    def parse_ternary(self) -> object:
+    def parse_ternary(self) -> ASTNode:
         """Parse a ternary expression: cond ? then : else_.
 
         Returns:
@@ -420,7 +439,7 @@ class Parser:
             return Ternary(cond, then, else_)
         return cond
 
-    def parse_or(self) -> object:
+    def parse_or(self) -> ASTNode:
         """Parse a logical OR expression.
 
         Returns:
@@ -432,7 +451,7 @@ class Parser:
             left = BinOp("||", left, self.parse_and())
         return left
 
-    def parse_and(self) -> object:
+    def parse_and(self) -> ASTNode:
         """Parse a logical AND expression.
 
         Returns:
@@ -444,7 +463,7 @@ class Parser:
             left = BinOp("&&", left, self.parse_compare())
         return left
 
-    def parse_compare(self) -> object:
+    def parse_compare(self) -> ASTNode:
         """Parse a comparison expression.
 
         Returns:
@@ -464,7 +483,7 @@ class Parser:
             left = BinOp(op, left, self.parse_add())
         return left
 
-    def parse_add(self) -> object:
+    def parse_add(self) -> ASTNode:
         """Parse an additive expression.
 
         Returns:
@@ -476,7 +495,7 @@ class Parser:
             left = BinOp(op, left, self.parse_mul())
         return left
 
-    def parse_mul(self) -> object:
+    def parse_mul(self) -> ASTNode:
         """Parse a multiplicative expression.
 
         Returns:
@@ -488,7 +507,7 @@ class Parser:
             left = BinOp(op, left, self.parse_power())
         return left
 
-    def parse_power(self) -> object:
+    def parse_power(self) -> ASTNode:
         """Parse a power expression (right-associative).
 
         Returns:
@@ -501,7 +520,7 @@ class Parser:
             return BinOp("^", left, right)
         return left
 
-    def parse_unary(self) -> object:
+    def parse_unary(self) -> ASTNode:
         """Parse a unary expression.
 
         Returns:
@@ -515,7 +534,7 @@ class Parser:
             return UnaryOp("!", self.parse_unary())
         return self.parse_postfix()
 
-    def parse_postfix(self) -> object:
+    def parse_postfix(self) -> ASTNode:
         """Parse a postfix expression (array indexing).
 
         Returns:
@@ -529,7 +548,7 @@ class Parser:
             node = Index(node, idx)
         return node
 
-    def parse_primary(self) -> object:
+    def parse_primary(self) -> ASTNode:
         """Parse a primary expression: literal, identifier, call, or parenthesised expr.
 
         Returns:
@@ -559,7 +578,7 @@ class Parser:
             self.advance()
             if self.match(TT.LPAREN):
                 self.advance()
-                args = []
+                args: list[ASTNode] = []
                 while not self.match(TT.RPAREN):
                     args.append(self.parse_expr())
                     if self.match(TT.COMMA):
