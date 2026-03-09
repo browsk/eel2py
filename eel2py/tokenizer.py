@@ -93,6 +93,7 @@ _PATTERNS: list[tuple[TT, str]] = [
     (TT.RBRACKET, r"\]"),
     (TT.SEMICOLON, r";"),
     (TT.COMMA, r","),
+    (TT.IDENT, r"\$[a-zA-Z_][a-zA-Z0-9_]*"),
     (TT.IDENT, r"[a-zA-Z_][a-zA-Z0-9_.]*"),
 ]
 

@@ -16,6 +16,7 @@ Primary use case: offline testing of JSFX DSP logic without running Reaper.
 - Loops: `while(cond)`, `loop(count, body)`
 - Memory buffers: `buf[index]`, `memset`, `memcpy`
 - Built-in math: `sin`, `cos`, `tan`, `sqrt`, `abs`, `log`, `exp`, `floor`, `ceil`, `min`, `max`, `sign`
+- Predefined constants: `$pi`, `$e`, `$phi`
 - EEL2 globals: `srate`, `num_ch`, `samplesblock`
 
 ### Out of scope (v1)
@@ -68,3 +69,4 @@ Run all tests: `pytest tests/`
 - Variables are global by default — use state dict to track them
 - `^` is power, not XOR
 - Uninitialized variables default to 0.0
+- `$pi`, `$e`, `$phi` are constants (not variables) — they map to `math.pi`, `math.e`, and the golden ratio

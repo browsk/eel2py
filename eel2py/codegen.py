@@ -21,6 +21,12 @@ from .parser import (
     While,
 )
 
+CONSTANT_MAP: dict[str, str] = {
+    "$pi": "math.pi",
+    "$phi": "((1.0 + math.sqrt(5.0)) / 2.0)",
+    "$e": "math.e",
+}
+
 BUILTIN_MAP: dict[str, str] = {
     "sin": "math.sin",
     "cos": "math.cos",
@@ -228,6 +234,8 @@ class CodeGen:
         if isinstance(node, StringLit):
             return repr(node.value)
         if isinstance(node, Ident):
+            if node.name in CONSTANT_MAP:
+                return CONSTANT_MAP[node.name]
             return f'state.get("{node.name}", 0.0)'
         if isinstance(node, BinOp):
             left = self._gen_expr(node.left)
