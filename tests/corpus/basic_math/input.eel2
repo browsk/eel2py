@@ -1,0 +1,9 @@
+// basic_math.eel2
+// Simple gain and power operations — no threshold logic
+
+@init
+gain = 0.5;
+
+@sample
+spl0 = spl0 * gain;
+spl1 = spl1 * gain;

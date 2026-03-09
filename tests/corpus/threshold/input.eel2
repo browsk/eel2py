@@ -1,0 +1,12 @@
+// threshold.eel2
+// Hard clipper: attenuate signal above threshold
+
+@init
+threshold = 0.5;
+
+@sample
+abs0 = spl0 < 0 ? -spl0 : spl0;
+abs1 = spl1 < 0 ? -spl1 : spl1;
+
+spl0 = abs0 > threshold ? spl0 * (threshold / abs0) : spl0;
+spl1 = abs1 > threshold ? spl1 * (threshold / abs1) : spl1;
