@@ -1,0 +1,12 @@
+// while_loop.eel2: halve signal while it exceeds threshold
+
+@init
+threshold = 0.5;
+
+@sample
+while (spl0 > threshold) (
+  spl0 = spl0 * 0.5;
+);
+while (spl1 > threshold) (
+  spl1 = spl1 * 0.5;
+);

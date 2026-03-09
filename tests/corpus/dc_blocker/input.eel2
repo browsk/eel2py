@@ -1,0 +1,19 @@
+// dc_blocker.eel2: first-order DC blocking filter
+// y[n] = x[n] - x[n-1] + R * y[n-1]
+
+@init
+x_prev_l = 0;
+x_prev_r = 0;
+y_prev_l = 0;
+y_prev_r = 0;
+R = 0.995;
+
+@sample
+out_l = spl0 - x_prev_l + R * y_prev_l;
+out_r = spl1 - x_prev_r + R * y_prev_r;
+x_prev_l = spl0;
+x_prev_r = spl1;
+y_prev_l = out_l;
+y_prev_r = out_r;
+spl0 = out_l;
+spl1 = out_r;

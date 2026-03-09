@@ -1,0 +1,8 @@
+// unary_ops.eel2: test unary negation (-) and logical not (!)
+
+@init
+mute = 0;
+
+@sample
+spl0 = !mute ? -spl0 : 0;
+spl1 = -spl1;

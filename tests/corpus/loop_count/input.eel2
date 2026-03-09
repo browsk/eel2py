@@ -1,0 +1,10 @@
+// loop_count.eel2: accumulate input n times using loop()
+
+@init
+n = 4;
+
+@sample
+acc = 0;
+loop(n, acc = acc + spl0);
+spl0 = acc;
+spl1 = acc;

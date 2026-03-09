@@ -1,0 +1,5 @@
+// power_operator.eel2: test ^ (EEL2 power / exponentiation operator)
+
+@sample
+spl0 = spl0 ^ 3;
+spl1 = spl1 ^ 2;

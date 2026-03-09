@@ -1,0 +1,16 @@
+// if_else.eel2: full-wave rectifier with gain (tests multi-statement if/else)
+
+@init
+gain = 2.0;
+
+@sample
+if (spl0 >= 0) (
+  spl0 = spl0 * gain;
+) else (
+  spl0 = -spl0 * gain;
+);
+if (spl1 >= 0) (
+  spl1 = spl1 * gain;
+) else (
+  spl1 = -spl1 * gain;
+);

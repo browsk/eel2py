@@ -1,0 +1,12 @@
+// logical_ops.eel2: stereo noise gate using && and ||
+// Opens only when both channels exceed threshold
+
+@init
+threshold = 0.3;
+
+@sample
+above_l = spl0 > threshold || spl0 < -threshold;
+above_r = spl1 > threshold || spl1 < -threshold;
+open = above_l && above_r;
+spl0 = open ? spl0 : 0;
+spl1 = open ? spl1 : 0;

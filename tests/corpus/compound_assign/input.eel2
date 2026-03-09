@@ -1,0 +1,11 @@
+// compound_assign.eel2: test +=, -=, *=, /= operators
+
+@init
+offset = 0.1;
+scale = 2.0;
+
+@sample
+spl0 += offset;
+spl0 *= scale;
+spl1 -= offset;
+spl1 /= scale;

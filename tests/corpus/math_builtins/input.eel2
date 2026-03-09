@@ -1,0 +1,5 @@
+// math_builtins.eel2: exercises sin, cos, sqrt, abs, floor, sign
+
+@sample
+spl0 = sin(spl0) + cos(spl0);
+spl1 = floor(abs(spl1) * 4) / 4 * sign(spl1);
